@@ -3,10 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Heart, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/hooks/useCart";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface ProductCardProps {
   id: string;
   name: string;
+  description?: string;
   price: number;
   originalPrice?: number;
   image: string;
@@ -19,6 +23,7 @@ interface ProductCardProps {
 const ProductCard = ({
   id,
   name,
+  description,
   price,
   originalPrice,
   image,
@@ -29,13 +34,24 @@ const ProductCard = ({
 }: ProductCardProps) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const { toast } = useToast();
+  const { addToCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    toast({
-      title: "Added to cart",
-      description: `${name} has been added to your cart.`,
-    });
+    
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to add items to cart",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    await addToCart(id);
   };
 
   const handleWishlist = (e: React.MouseEvent) => {
@@ -98,6 +114,12 @@ const ProductCard = ({
         <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
           {name}
         </h3>
+        
+        {description && (
+          <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+            {description}
+          </p>
+        )}
 
         {/* Rating */}
         <div className="flex items-center gap-2">

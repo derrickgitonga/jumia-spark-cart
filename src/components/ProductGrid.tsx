@@ -1,9 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProductCard from "./ProductCard";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock product data - this would come from an API in a real application
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  original_price?: number;
+  image_url: string;
+  rating: number;
+  reviews: number;
+  discount?: number;
+  is_new: boolean;
+  category: string;
+  brand?: string;
+}
+
+// Keeping mock data as fallback
 const mockProducts = [
   {
     id: "1",
@@ -93,16 +109,55 @@ const mockProducts = [
 
 interface ProductGridProps {
   selectedCategory: string;
+  searchQuery?: string;
 }
 
-const ProductGrid = ({ selectedCategory }: ProductGridProps) => {
+const ProductGrid = ({ selectedCategory, searchQuery }: ProductGridProps) => {
   const [displayCount, setDisplayCount] = useState(8);
   const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [fetchLoading, setFetchLoading] = useState(true);
 
-  // Filter products based on selected category
-  const filteredProducts = selectedCategory === "all" 
-    ? mockProducts 
-    : mockProducts.filter(product => product.category === selectedCategory);
+  // Fetch products from Supabase
+  const fetchProducts = async () => {
+    setFetchLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching products:', error);
+        setProducts(mockProducts as any);
+      } else {
+        setProducts(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setProducts(mockProducts as any);
+    } finally {
+      setFetchLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  // Filter products based on selected category and search query
+  let filteredProducts = selectedCategory === "all" 
+    ? products 
+    : products.filter(product => product.category === selectedCategory);
+
+  // Apply search filter
+  if (searchQuery && searchQuery.trim()) {
+    filteredProducts = filteredProducts.filter(product =>
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.brand?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
 
   const displayedProducts = filteredProducts.slice(0, displayCount);
   const hasMore = displayCount < filteredProducts.length;
@@ -116,12 +171,22 @@ const ProductGrid = ({ selectedCategory }: ProductGridProps) => {
     }, 500);
   };
 
+  if (fetchLoading) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Results Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">
-          {selectedCategory === "all" ? "All Products" : `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}`}
+          {searchQuery ? `Search Results for "${searchQuery}"` : 
+           selectedCategory === "all" ? "All Products" : 
+           `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}`}
         </h2>
         <p className="text-muted-foreground">
           Showing {displayedProducts.length} of {filteredProducts.length} products
@@ -131,13 +196,27 @@ const ProductGrid = ({ selectedCategory }: ProductGridProps) => {
       {/* Product Grid */}
       {filteredProducts.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground text-lg">No products found in this category.</p>
+          <p className="text-muted-foreground text-lg">
+            {searchQuery ? `No products found for "${searchQuery}"` : "No products found in this category."}
+          </p>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {displayedProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
+              <ProductCard 
+                key={product.id} 
+                id={product.id}
+                name={product.name}
+                description={product.description}
+                price={product.price}
+                originalPrice={product.original_price}
+                image={product.image_url}
+                rating={product.rating}
+                reviews={product.reviews}
+                discount={product.discount}
+                isNew={product.is_new}
+              />
             ))}
           </div>
 

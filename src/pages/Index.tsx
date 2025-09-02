@@ -7,10 +7,16 @@ import Footer from "@/components/Footer";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setSelectedCategory("all"); // Reset category when searching
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header onSearch={handleSearch} />
       <main>
         <Hero />
         
@@ -30,7 +36,7 @@ const Index = () => {
               onCategoryChange={setSelectedCategory}
             />
             
-            <ProductGrid selectedCategory={selectedCategory} />
+            <ProductGrid selectedCategory={selectedCategory} searchQuery={searchQuery} />
           </div>
         </section>
       </main>

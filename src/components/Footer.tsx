@@ -10,7 +10,7 @@ const Footer = () => {
           {/* Company Info */}
           <div className="space-y-4">
             <div className="text-2xl font-bold text-primary">
-              Jumia<span className="text-primary-glow">Clone</span>
+              Simple PAY <span className="text-primary-glow">Global</span>
             </div>
             <p className="text-muted-foreground">
               Your trusted destination for the latest electronics. Quality products, 
@@ -70,7 +70,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3 text-muted-foreground">
                 <Mail className="h-4 w-4" />
-                <span>support@jumiaclone.com</span>
+                <span>simplepayglobal@yahoo.com</span>
               </div>
               <div className="flex items-start space-x-3 text-muted-foreground">
                 <MapPin className="h-4 w-4 mt-1" />
@@ -94,7 +94,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-border mt-12 pt-8 text-center text-muted-foreground">
-          <p>&copy; 2024 JumiaClone. All rights reserved. Built with ❤️ for electronics enthusiasts.</p>
+          <p>&copy; 2024 Simple PAY Global. All rights reserved. Built with ❤️ for electronics enthusiasts.</p>
         </div>
       </div>
     </footer>
