@@ -1,12 +1,40 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import Header from "@/components/Header";
+import Hero from "@/components/Hero";
+import CategoryFilter from "@/components/CategoryFilter";
+import ProductGrid from "@/components/ProductGrid";
+import Footer from "@/components/Footer";
 
 const Index = () => {
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main>
+        <Hero />
+        
+        {/* Products Section */}
+        <section className="container mx-auto px-4 py-16">
+          <div className="space-y-8">
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl font-bold">Featured Electronics</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Discover our curated selection of the latest and greatest electronic devices. 
+                From cutting-edge smartphones to powerful laptops, find everything you need.
+              </p>
+            </div>
+            
+            <CategoryFilter 
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+            />
+            
+            <ProductGrid selectedCategory={selectedCategory} />
+          </div>
+        </section>
+      </main>
+      <Footer />
     </div>
   );
 };
