@@ -21,10 +21,6 @@ interface Order {
   shipping_address?: string;
   payment_method?: string;
   order_items: OrderItem[];
-  profiles?: {
-    full_name?: string;
-    email?: string;
-  };
 }
 
 interface OrderItem {
@@ -82,8 +78,7 @@ const Admin = () => {
           order_items (
             *,
             products (name, image_url)
-          ),
-          profiles (full_name, email)
+          )
         `)
         .order('created_at', { ascending: false });
 
@@ -325,10 +320,10 @@ const Admin = () => {
                         <TableCell>
                           <div>
                             <div className="font-medium">
-                              {order.profiles?.full_name || 'Unknown'}
+                              Customer
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {order.profiles?.email}
+                              ID: {order.user_id.slice(0, 8)}...
                             </div>
                           </div>
                         </TableCell>
