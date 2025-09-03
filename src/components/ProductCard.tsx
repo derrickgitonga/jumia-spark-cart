@@ -64,7 +64,7 @@ const ProductCard = ({
   };
 
   return (
-    <div className="product-card group">
+    <div className="product-card group cursor-pointer hover:shadow-lg transition-all duration-300">
       {/* Image Container */}
       <div className="relative mb-4 overflow-hidden rounded-lg bg-muted/30">
         <img
@@ -100,11 +100,12 @@ const ProductCard = ({
         {/* Quick Add to Cart - Appears on Hover */}
         <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button 
-            className="w-full button-primary"
+            className="w-full button-primary text-sm sm:text-base py-2 px-3"
             onClick={handleAddToCart}
           >
             <ShoppingCart className="w-4 h-4 mr-2" />
-            Add to Cart
+            <span className="hidden sm:inline">Add to Cart</span>
+            <span className="sm:hidden">Add</span>
           </Button>
         </div>
       </div>

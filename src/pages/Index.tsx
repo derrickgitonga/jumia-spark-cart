@@ -10,8 +10,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setSelectedCategory("all"); // Reset category when searching
+    // This is now handled by navigation to search results page
   };
 
   return (

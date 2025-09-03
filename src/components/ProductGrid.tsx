@@ -297,19 +297,23 @@ const ProductGrid = ({ selectedCategory, searchQuery }: ProductGridProps) => {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {displayedProducts.map((product) => (
-              <ProductCard 
-                key={product.id} 
-                id={product.id}
-                name={product.name}
-                description={product.description}
-                price={product.price}
-                originalPrice={product.original_price}
-                image={product.image_url}
-                rating={product.rating}
-                reviews={product.reviews}
-                discount={product.discount}
-                isNew={product.is_new}
-              />
+              <div 
+                key={product.id}
+                onClick={() => window.location.href = `/product/${product.id}`}
+              >
+                <ProductCard 
+                  id={product.id}
+                  name={product.name}
+                  description={product.description}
+                  price={product.price}
+                  originalPrice={product.original_price}
+                  image={product.image_url}
+                  rating={product.rating}
+                  reviews={product.reviews}
+                  discount={product.discount}
+                  isNew={product.is_new}
+                />
+              </div>
             ))}
           </div>
 
