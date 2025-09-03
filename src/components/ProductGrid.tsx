@@ -145,18 +145,111 @@ const ProductGrid = ({ selectedCategory, searchQuery }: ProductGridProps) => {
     fetchProducts();
   }, []);
 
-  // Filter products based on selected category and search query
+  // Enhanced search with similarity scoring
+  const getSearchScore = (product: Product, query: string): number => {
+    const lowerQuery = query.toLowerCase();
+    const lowerName = product.name.toLowerCase();
+    const lowerDescription = product.description.toLowerCase();
+    const lowerBrand = product.brand?.toLowerCase() || '';
+    const lowerCategory = product.category.toLowerCase();
+    
+    let score = 0;
+    
+    // Exact matches get highest score
+    if (lowerName.includes(lowerQuery)) score += 100;
+    if (lowerBrand.includes(lowerQuery)) score += 80;
+    if (lowerDescription.includes(lowerQuery)) score += 60;
+    if (lowerCategory.includes(lowerQuery)) score += 40;
+    
+    // Partial word matches
+    const queryWords = lowerQuery.split(' ');
+    const productWords = [...lowerName.split(' '), ...lowerDescription.split(' '), ...lowerBrand.split(' ')];
+    
+    queryWords.forEach(queryWord => {
+      productWords.forEach(productWord => {
+        if (productWord.includes(queryWord) && queryWord.length > 2) {
+          score += 20;
+        }
+        // Fuzzy matching for similar words
+        if (queryWord.length > 3 && productWord.length > 3) {
+          const similarity = calculateSimilarity(queryWord, productWord);
+          if (similarity > 0.7) score += 15;
+        }
+      });
+    });
+    
+    // Category and brand similarity for related items
+    if (!lowerName.includes(lowerQuery) && !lowerDescription.includes(lowerQuery)) {
+      // Show similar items from same category or brand
+      if (products.some(p => p.name.toLowerCase().includes(lowerQuery) && p.category === product.category)) {
+        score += 10;
+      }
+      if (products.some(p => p.name.toLowerCase().includes(lowerQuery) && p.brand === product.brand)) {
+        score += 15;
+      }
+    }
+    
+    return score;
+  };
+
+  // Simple string similarity function
+  const calculateSimilarity = (str1: string, str2: string): number => {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    
+    if (longer.length === 0) return 1.0;
+    
+    const editDistance = levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+  };
+
+  // Levenshtein distance for fuzzy matching
+  const levenshteinDistance = (str1: string, str2: string): number => {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  };
+
+  // Filter products based on selected category
   let filteredProducts = selectedCategory === "all" 
     ? products 
     : products.filter(product => product.category === selectedCategory);
 
-  // Apply search filter
+  // Enhanced search with similarity
   if (searchQuery && searchQuery.trim()) {
-    filteredProducts = filteredProducts.filter(product =>
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.brand?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const searchResults = products
+      .map(product => ({
+        ...product,
+        searchScore: getSearchScore(product, searchQuery.trim())
+      }))
+      .filter(product => product.searchScore > 0)
+      .sort((a, b) => b.searchScore - a.searchScore);
+    
+    // If we have exact matches, show them plus related items
+    // If no exact matches, show similar items
+    filteredProducts = searchResults.length > 0 ? searchResults : filteredProducts;
   }
 
   const displayedProducts = filteredProducts.slice(0, displayCount);
