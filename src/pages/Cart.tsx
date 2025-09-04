@@ -94,11 +94,14 @@ const Cart = () => {
       await clearCart();
 
       toast({
-        title: "Order placed successfully!",
-        description: `Order #${order.id.substring(0, 8)} has been submitted for admin approval. You will receive an email confirmation once approved.`,
+        title: "Thank you for making an order, wait for approval",
+        description: `Order #${order.id.substring(0, 8)} has been submitted. Track your order progress in the Orders page.`,
       });
 
-      navigate("/");
+      // Clear cart after successful order
+      clearCart();
+      
+      navigate("/orders");
 
     } catch (error) {
       console.error('Checkout error:', error);

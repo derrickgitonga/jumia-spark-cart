@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Search, User, Menu, X, Shield } from "lucide-react";
+import { ShoppingCart, Search, User, Menu, X, Shield, Package } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { Link, useNavigate } from "react-router-dom";
@@ -76,6 +76,12 @@ const Header = ({ onSearch }: HeaderProps) => {
                       {cartCount}
                     </Badge>
                   )}
+                </Button>
+              </Link>
+              
+              <Link to="/orders">
+                <Button variant="ghost" size="icon" className="hover:bg-muted transition-colors">
+                  <Package className="w-5 h-5" />
                 </Button>
               </Link>
               
