@@ -61,13 +61,13 @@ const Cart = () => {
     setLoading(true);
 
     try {
-      // Create order
+      // Create order with processing status
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           user_id: user.id,
           total_amount: totalPrice,
-          status: 'pending',
+          status: 'processing',
           payment_method: checkoutData.paymentMethod,
           shipping_address: checkoutData.shippingAddress,
         })
@@ -90,6 +90,38 @@ const Cart = () => {
 
       if (itemsError) throw itemsError;
 
+      // Initiate M-Pesa payment if selected
+      if (checkoutData.paymentMethod === 'mobile_money') {
+        try {
+          const mpesaResponse = await supabase.functions.invoke('mpesa-payment', {
+            body: {
+              phoneNumber: checkoutData.phone,
+              amount: totalPrice,
+              orderId: order.id
+            }
+          });
+
+          if (mpesaResponse.error) {
+            throw new Error('M-Pesa payment initiation failed');
+          }
+
+          const { data: mpesaData } = mpesaResponse;
+          if (mpesaData?.success) {
+            toast({
+              title: "Payment request sent",
+              description: "Check your phone for M-Pesa payment prompt",
+            });
+          }
+        } catch (mpesaError) {
+          console.error('M-Pesa error:', mpesaError);
+          toast({
+            title: "Payment prompt failed",
+            description: "Order created but payment prompt failed. You can pay later.",
+            variant: "destructive",
+          });
+        }
+      }
+
       // Clear cart
       await clearCart();
 
@@ -97,9 +129,6 @@ const Cart = () => {
         title: "Thank you for making an order, wait for approval",
         description: `Order #${order.id.substring(0, 8)} has been submitted. Track your order progress in the Orders page.`,
       });
-
-      // Clear cart after successful order
-      clearCart();
       
       navigate("/orders");
 

@@ -75,6 +75,8 @@ const Orders = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'processing':
+        return <Badge variant="secondary" className="flex items-center gap-1"><Clock className="w-3 h-3" />Processing Payment</Badge>;
       case 'pending':
         return <Badge variant="secondary" className="flex items-center gap-1"><Clock className="w-3 h-3" />Waiting for Approval</Badge>;
       case 'approved':
@@ -88,6 +90,8 @@ const Orders = () => {
 
   const getStatusMessage = (status: string) => {
     switch (status) {
+      case 'processing':
+        return "Your order is being processed. If you selected mobile money, please complete the payment on your phone.";
       case 'pending':
         return "Your order is being reviewed by our team. You'll receive a notification once it's approved.";
       case 'approved':
