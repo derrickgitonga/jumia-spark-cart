@@ -147,14 +147,13 @@ const Admin = () => {
         throw error;
       }
 
-      // If approved, send email notification
-      if (newStatus === 'approved') {
-        const order = orders.find(o => o.id === orderId);
-        if (order) {
-          await sendApprovalEmail(order);
-        }
+      // Send email notification for both approval and rejection
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        await sendStatusChangeEmail(order, newStatus);
       }
 
+      // Update local state immediately
       setOrders(orders.map(order => 
         order.id === orderId ? { ...order, status: newStatus } : order
       ));
@@ -164,7 +163,7 @@ const Admin = () => {
         description: `Order ${newStatus} successfully`,
       });
 
-      // Refresh stats
+      // Refresh stats to get updated counts
       fetchStats();
     } catch (error) {
       console.error('Error updating order:', error);
@@ -176,7 +175,7 @@ const Admin = () => {
     }
   };
 
-  const sendApprovalEmail = async (order: Order) => {
+  const sendStatusChangeEmail = async (order: Order, status: string) => {
     try {
       // Get customer profile for email
       const { data: profile } = await supabase
@@ -198,31 +197,32 @@ const Admin = () => {
       }));
 
       // Send email via edge function
-      const { error } = await supabase.functions.invoke('send-order-approval-email', {
+      const { error } = await supabase.functions.invoke('send-order-status-email', {
         body: {
           email: profile.email,
           customerName: profile.full_name,
           orderItems,
           totalAmount: Number(order.total_amount),
-          orderId: order.id
+          orderId: order.id,
+          status: status
         }
       });
 
       if (error) {
-        console.error('Error sending approval email:', error);
+        console.error('Error sending status email:', error);
         toast({
           title: "Email Error",
-          description: "Order approved but email notification failed",
+          description: `Order ${status} but email notification failed`,
           variant: "destructive",
         });
       } else {
         toast({
           title: "Email Sent",
-          description: "Approval email sent to customer",
+          description: `${status === 'approved' ? 'Approval' : 'Status update'} email sent to customer`,
         });
       }
     } catch (error) {
-      console.error('Error sending approval email:', error);
+      console.error('Error sending status email:', error);
     }
   };
 
