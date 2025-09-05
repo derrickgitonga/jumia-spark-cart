@@ -147,6 +147,14 @@ const Admin = () => {
         throw error;
       }
 
+      // If approved, send email notification
+      if (newStatus === 'approved') {
+        const order = orders.find(o => o.id === orderId);
+        if (order) {
+          await sendApprovalEmail(order);
+        }
+      }
+
       setOrders(orders.map(order => 
         order.id === orderId ? { ...order, status: newStatus } : order
       ));
@@ -168,8 +176,60 @@ const Admin = () => {
     }
   };
 
+  const sendApprovalEmail = async (order: Order) => {
+    try {
+      // Get customer profile for email
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('user_id', order.user_id)
+        .single();
+
+      if (!profile?.email) {
+        console.warn('No email found for customer');
+        return;
+      }
+
+      // Prepare order items for email
+      const orderItems = order.order_items.map(item => ({
+        name: item.products?.name || 'Product',
+        quantity: item.quantity,
+        price: Number(item.unit_price)
+      }));
+
+      // Send email via edge function
+      const { error } = await supabase.functions.invoke('send-order-approval-email', {
+        body: {
+          email: profile.email,
+          customerName: profile.full_name,
+          orderItems,
+          totalAmount: Number(order.total_amount),
+          orderId: order.id
+        }
+      });
+
+      if (error) {
+        console.error('Error sending approval email:', error);
+        toast({
+          title: "Email Error",
+          description: "Order approved but email notification failed",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Email Sent",
+          description: "Approval email sent to customer",
+        });
+      }
+    } catch (error) {
+      console.error('Error sending approval email:', error);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'processing':
+        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Processing Payment</Badge>;
       case 'pending':
         return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
       case 'approved':
@@ -351,7 +411,7 @@ const Admin = () => {
                           {new Date(order.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          {order.status === 'pending' && (
+                          {(order.status === 'pending' || order.status === 'processing') && (
                             <div className="flex gap-2">
                               <Button
                                 size="sm"
